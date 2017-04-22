@@ -1,2 +1,1 @@
-# haleywang.github.io
-my blog
+haleywang blog

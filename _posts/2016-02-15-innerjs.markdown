@@ -1,0 +1,100 @@
+---
+layout: post
+title: InnerJS，找到你的使用场景
+date: 2016-02-15 15:32:24.000000000 +09:00
+---
+
+
+InnerJS是我两年前写的代码，名称的由来是innerHTML，看字眼大概也知道它是干什么用的，它包含了innerHTML的能力；但是一直没有大规模（UV亿级以上的站点）的使用， 我只是希望更多的人证实该方案可行，才会去大规模使用。
+
+为什么写了这么久的代码今天又拿出来了呢，其实我想将InnerJS与Pjax一起应用，可以很容易的动态绑定DOM。好了，不啰嗦了，以下是InnerJS的源码：
+
+
+```javascript
+/*
+ * InnerJS.js
+ *
+ * Release 1.2.8
+ * @author  <a href="mailto:haley.wang.vip@gmail.com">Haley Wang</a>
+ * @describe  InnerJS，插入并执行JavaScript/HTML/CSS
+ */
+var InnerJS = {
+	set:function(element, str){
+		element.innerHTML = '<div style="display:none">InnerJS</div>'+str;
+		element.removeChild( element.children[0] );
+
+		var scripts = element.getElementsByTagName('script');
+		if(scripts.length > 0){
+			this.task = []
+			for(var i=0, len=scripts.length; i<len; i++){
+				this.task.push(scripts[i]);
+			}
+			this.overwrite();
+			this.run();
+		}
+	},
+	overwrite:function(){
+		var that = this;
+		document.write = function(str){
+			that.insertHTML(that.exeScript, "beforeBegin", str);
+		};
+		document.writeln = function(str){
+			that.insertHTML(that.exeScript, "beforeBegin", str+"\n");
+		};
+	},
+	run:function(){
+		var script = this.task.shift();
+		if(!script)return;
+
+		var resObj = document.createElement('script');
+		resObj.type = "text/javascript";
+		var that = this;
+		if(script.src){
+			if (resObj.readyState){
+				resObj.onreadystatechange = function(){
+					if(resObj.readyState == "loaded" || resObj.readyState == "complete"){
+						resObj.onreadystatechange = null;
+						that.run();
+					}
+				};
+			}else {
+				resObj.onload = function(){
+					that.run();
+				};
+			}
+			resObj.src = script.src;
+		}else{
+			resObj.text = script.text;
+		}
+		this.exeScript = resObj;
+		script.parentNode.replaceChild(resObj, script);
+		if(!script.src){
+			that.run();
+		}
+	},
+	insertHTML:function (ele, falg, html) {
+		if (ele.insertAdjacentHTML) {
+			ele.insertAdjacentHTML(falg, html)
+		}else{
+			var range = ele.ownerDocument.createRange();
+			falg = falg.toUpperCase();
+			if (falg == "AFTERBEGIN" || falg == "BEFOREEND") {
+				range.selectNodeContents(ele);
+				range.collapse(falg == "AFTERBEGIN")
+			} else {
+				var f = falg == "BEFOREBEGIN";
+				range[f ? "setStartBefore" : "setEndAfter"](ele);
+				range.collapse(f)
+			}
+			range.insertNode(range.createContextualFragment(html))
+		}
+	}
+};
+```
+
+下载 [InnerJS Demo](http://haley.wang/wp-content/uploads/2015/01/InnerJS.zip)
+
+注意：InnerJS每次都会生成全新的DOM结构，执行JavaScript所生成的对象，会被重新覆盖； 这里有一个问题，第一次执行InnerJS向一个全局Array插入元素，如果第二次执行又向这个Array插入元素，应用中又会用到这个Array，那么就会出现一些问题，除非每次都去初始化这个全局Array；毕竟我们不能给用户设定规则去使用InnerJS，所有我也在考虑怎么去更好的完善或规避这个问题。
+
+
+如果你看完了也使用过Demo了，有什么问题希望一起交流！
