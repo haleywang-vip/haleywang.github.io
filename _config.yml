@@ -1,8 +1,8 @@
 # Basic
-title: Haley Wang
+title: Harley Wang
 subtitle: 为了心中的美好，不妥协直到变老
 # welcome_message: <a href="https://github.com/onevcat/vno-jekyll" target="_blank">Download the theme</a>
-description: Vno Jekyll is a port of my Ghost theme vno.
+description: Technical discuss & Note-taking.
 creator: <a href="http://haley.wang">@haleywang</a>
 
 url: "http://haley.wang"
@@ -37,8 +37,8 @@ comment:
 
 # Social
 social:
-    weibo: haleywang
-    github: haleywang
+    weibo: harleywang
+    github: harleywang
     twitter: haleywang
     # gplus:
     mail: haley.wang.vip@gmail.com
